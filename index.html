@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather Forecast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        input, select, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+<h1>🌤 Weather Forecast App</h1>
+
+<!-- Weather Section -->
+<div class="section">
+    <h2>Get Current Weather</h2>
+    <input type="text" id="weatherCity" placeholder="Enter city name">
+    <button onclick="getWeather()">Get Weather</button>
+    <div id="weatherResult" class="response"></div>
+</div>
+
+<!-- Subscribe Section -->
+<div class="section">
+    <h2>Subscribe to Weather Updates</h2>
+    <input type="email" id="subEmail" placeholder="Email">
+    <input type="text" id="subCity" placeholder="City">
+    <select id="subFrequency">
+        <option value="hourly">Hourly</option>
+        <option value="daily">Daily</option>
+    </select>
+    <button onclick="subscribe()">Subscribe</button>
+    <div id="subResult" class="response"></div>
+</div>
+
+<!-- Confirm Subscription -->
+<div class="section">
+    <h2>Confirm Subscription</h2>
+    <input type="text" id="confirmToken" placeholder="Confirmation token">
+    <button onclick="confirmSubscription()">Confirm</button>
+    <div id="confirmResult" class="response"></div>
+</div>
+
+<!-- Unsubscribe -->
+<div class="section">
+    <h2>Unsubscribe</h2>
+    <input type="text" id="unsubscribeToken" placeholder="Unsubscribe token">
+    <button onclick="unsubscribe()">Unsubscribe</button>
+    <div id="unsubscribeResult" class="response"></div>
+</div>
+
+<script>
+    const baseUrl = 'https://weather-subscription-api-production-9648.up.railway.app';
+
+    async function getWeather() {
+        const city = document.getElementById('weatherCity').value;
+        const res = await fetch(`${baseUrl}/weather?city=${encodeURIComponent(city)}`);
+        const result = document.getElementById('weatherResult');
+        if (res.ok) {
+            const data = await res.json();
+            result.innerText = `Temperature: ${data.temperature}°C\nHumidity: ${data.humidity}%\nDescription: ${data.description}`;
+        } else {
+            result.innerText = `Error ${res.status}: ${res.statusText}`;
+        }
+    }
+
+    async function subscribe() {
+        const email = document.getElementById('subEmail').value;
+        const city = document.getElementById('subCity').value;
+        const frequency = document.getElementById('subFrequency').value;
+
+        const formData = new URLSearchParams();
+        formData.append('email', email);
+        formData.append('city', city);
+        formData.append('frequency', frequency);
+
+        const res = await fetch(`${baseUrl}/subscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+
+        const result = document.getElementById('subResult');
+        result.innerText = res.ok
+            ? 'Subscription successful! Check your email to confirm.'
+            : `Error ${res.status}: ${res.statusText}`;
+    }
+
+    async function confirmSubscription() {
+        const token = document.getElementById('confirmToken').value;
+        const res = await fetch(`${baseUrl}/confirm/${token}`);
+        const result = document.getElementById('confirmResult');
+        result.innerText = res.ok
+            ? 'Subscription confirmed!'
+            : `Error ${res.status}: ${res.statusText}`;
+    }
+
+    async function unsubscribe() {
+        const token = document.getElementById('unsubscribeToken').value;
+        const res = await fetch(`${baseUrl}/unsubscribe/${token}`);
+        const result = document.getElementById('unsubscribeResult');
+        result.innerText = res.ok
+            ? 'Unsubscribed successfully.'
+            : `Error ${res.status}: ${res.statusText}`;
+    }
+</script>
+</body>
+</html>
